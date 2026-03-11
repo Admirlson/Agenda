@@ -37,3 +37,12 @@
 .menu:hover .menu-content{
     display: block;
 }
+
+.suivi-complet{
+    display: none;
+}
+
+.lire-plus{
+    border: none;
+    color: red;
+}

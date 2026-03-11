@@ -3,6 +3,7 @@ package com.manda.agenda.controller;
 import java.security.Principal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -23,325 +24,612 @@ import com.manda.agenda.utilitaires.PasswordEncryptionService;
 @Controller
 public class FormeController {
 
-    // private List<EvenementDTO> evenements = new ArrayList<EvenementDTO>();
+        // private List<EvenementDTO> evenements = new ArrayList<EvenementDTO>();
 
-    @Autowired
-    EvenementService evenementService;
+        @Autowired
+        EvenementService evenementService;
 
-    @Autowired
-    UserService userService;
+        @Autowired
+        UserService userService;
 
-    @GetMapping("/")
-    String login() {
-        return "login";
-    }
-
-    @GetMapping("/listeEvenement")
-    String listeEvenement(Model model, Principal principal) {
-        // System.out.println("Prenom de l'utilisateur====================" +
-        // userService.getPrenomUser());
-        model.addAttribute("evenements", evenementService.listEvenementDTOs());
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        evenementService.listEvenementDTOs(evenementService.listEvenements());
-        return "listeEvenement";
-    }
-
-    @PostMapping("/annuler")
-    String annuler(Model model, Principal principal) {
-        model.addAttribute("evenements", evenementService.listEvenementDTOs());
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        return "listeEvenement";
-    }
-
-    @GetMapping("/formAgenda")
-    String formeAgenda(Model model, Principal principal) {
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        return "formAgenda";
-    }
-
-    @GetMapping("/rechercherEvenement")
-    String rechercherEvenement(@RequestParam("id") int id, Model model, Principal principal) {
-        model.addAttribute("evenement", evenementService.getEvenement(id));
-        model.addAttribute("evenements", evenementService.listEvenementDTOs());
-        model.addAttribute("optionFormat", List.of("En ligne", "Présentiel"));
-        model.addAttribute("optionType", List.of("Interne", "Externe"));
-        model.addAttribute("optionHeure",
-                List.of("1h am", "2h am", "3h am", "4h am", "5h am", "6h am", "7h am", "8h am",
-                        "9h am", "10h am", "11h am", "Midi", "1h pm", "2h pm", "3h pm", "4h pm", "5h pm", "6h pm",
-                        "7h pm", "8h pm",
-                        "9h pm", "10h pm", "11h pm", "Minuit"));
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-
-        return "modifierEvenement";
-    }
-
-    @PostMapping("/user/saveEvenement")
-    String saveEvenement(@ModelAttribute EvenementDTO evenement, Model model, Principal principal) {
-
-        try {
-            System.out.println("null==========================");
-            evenement.setStatut("Planifié");
-            evenement.setWhocreated("admirl");
-            evenement.setDatecreated(LocalDate.now());
-            evenementService.enregistrer(evenement);
-            model.addAttribute("evenements", evenementService.listEvenementDTOs());
-            model.addAttribute("username", principal.getName());
-            model.addAttribute("prenom", userService.getPrenomUser());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        model.addAttribute("evenements", evenementService.listEvenementDTOs());
-
-        return "listeEvenement";
-    }
-
-    @PostMapping("/user/modifierEvenement")
-    String modifierEvenement(@ModelAttribute EvenementDTO evenement, Model model, Principal principal) {
-        evenement.setStatut("Reporté");
-        evenement.setWhomodified("admirl");
-        evenement.setDatemodified(LocalDate.now());
-        evenementService.modifier(evenement);
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        model.addAttribute("evenements", evenementService.listEvenementDTOs());
-        return "redirect:/listeEvenement";
-    }
-
-    @PostMapping("/user/annulerEvenement")
-    String anuulerEvenement(@RequestParam("id") int id, Model model, Principal principal) {
-        EvenementDTO evenement = evenementService.getEvenement(id);
-        System.out.println("Id de l'evenement===========" + evenement.getId());
-        System.out.println("Institution==========" + evenement.getInstitution());
-        evenement.setStatut("Annulé");
-        evenement.setWhomodified("admirl");
-        evenement.setDatemodified(LocalDate.now());
-        evenementService.modifier(evenement);
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        model.addAttribute("evenements", evenementService.listEvenementDTOs());
-        return "redirect:/listeEvenement";
-    }
-
-    @PostMapping("/user/terminerEvenement")
-    String terminerEvenement(@RequestParam("id") int id, @RequestParam("statut") String statut, Model model,
-            Principal principal) {
-        if (statut.equals("Terminé")) {
-            model.addAttribute("modalVisible", "oui");
-            // System.out.println("Id de l'evenement===========" + id);
-            // System.out.println("Statut==========" + statut);
-            model.addAttribute("evenementId", id);
-            model.addAttribute("evenement", evenementService.listEvenementDTOs());
-            model.addAttribute("username", principal.getName());
-
-        }
-        model.addAttribute("prenom", userService.getPrenomUser());
-        return "listeEvenement";
-    }
-
-    @PostMapping("/user/validerTerminerEvenement")
-    String validerTerminerEvenement(@RequestParam("id") int id, @RequestParam("suivis") String suivis, Model model,
-            Principal principal) {
-        System.out.println("Id de l'evenement===========" + id);
-        EvenementDTO evenement = evenementService.getEvenement(id);
-        evenement.setStatut("Terminé");
-        evenement.setSuivis(suivis);
-        evenement.setWhomodified("admirl");
-        evenement.setDatemodified(LocalDate.now());
-        evenementService.modifier(evenement);
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        model.addAttribute("evenements", evenementService.listEvenementDTOs());
-        return "redirect:/listeEvenement";
-    }
-
-    /**
-     * @return
-     */
-    @GetMapping("/user/generatPdf")
-    public ResponseEntity<byte[]> generatePdf() {
-        byte[] liste = null;
-        try {
-
-            // List<EvenementDTO> list = evenementService.listEvenementDTOs(evenements);
-            // if (list != null) {
-            // for (EvenementDTO evenementDTO : list) {
-            // System.out.println(evenementDTO.getDate());
-            // System.out.println(evenementDTO.getHeure());
-            // }
-            // } else {
-            // System.out.println("List est nulle");
-            // }
-            liste = evenementService.listeEvenement(evenementService.listEvenementDTOs());
-            // evenementService.sendReminders(evenementService.listEvenementDTOs());
-            System.out.println("Apres sendReminders");
-            if (liste != null) {
-                System.out.println("Liste n'est pas nulle");
-            }
-
-        } catch (Exception ex) {
-        }
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
-                .header("Content-Disposition", "inline; filename=raport.pdf").body(liste);
-    }
-
-    @GetMapping("/user/generatCsv")
-    public ResponseEntity<byte[]> generateCsv() {
-        byte[] liste = null;
-        try {
-            liste = evenementService.generateCsv(evenementService.listEvenementDTOs());
-            if (liste != null) {
-                System.out.println("Liste n'est pas nulle");
-            }
-
-        } catch (Exception ex) {
-        }
-        // return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
-        // .header("Content-Disposition", "inline; filename=raport.pdf").body(liste);
-
-        return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN)
-                .header("Content-Disposition", "attachment; filename=raport.csv").body(liste);
-    }
-
-    @PostMapping("/user/formModifierPassword")
-    public String formModiierPassword(@RequestParam("username") String username, Model model, Principal principal) {
-        model.addAttribute("username", username);
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        model.addAttribute("first", "Non");
-        return "modifierPassword";
-    }
-
-    @PostMapping("/user/modifierPassword")
-    public String modifierPasswordUser(@RequestParam("password") String password,
-            @RequestParam("password2") String password2,
-            @RequestParam("username") String username, Model model, Principal principal) {
-        if (password.equals(password2)) {
-            userService.modifierPassword(new PasswordEncryptionService().encrypPassword(password), username);
-            return "login";
-        } else {
-            model.addAttribute("message", "Les deux mots de passe entrés ne sont pas identiques");
-            model.addAttribute("username", principal.getName());
-            model.addAttribute("prenom", userService.getPrenomUser());
-            return "modifierPassword";
+        @GetMapping("/")
+        String login() {
+                return "login";
         }
 
-    }
+        @GetMapping("/listeEvenement")
+        String listeEvenement(Model model, Principal principal) {
+                // System.out.println("Prenom de l'utilisateur====================" +
+                // userService.getPrenomUser());
+                List<EvenementDTO> list = evenementService.listEvenementDTOs();
+                int longueurMax = 50;
+                List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement -> {
+                        String suiviTronque = "";
+                        String suiviComplet = evenement.getSuivis() != null ? evenement.getSuivis() : "";
+                        String nouvelleDate = "";
+                        if (evenement.getSuivis() != null && evenement.getNouvelleDate() != null) {
+                                suiviTronque = evenement.getSuivis().length() > longueurMax
+                                                ? evenement.getSuivis().substring(0, longueurMax) + "..."
+                                                : evenement.getSuivis();
+                                nouvelleDate = evenement.getNouvelleDate().toString();
+                        }
 
-    @GetMapping("/first/formModifierPassword")
-    public String formModiierPasswordFirstConnection(Model model,
-            Principal principal) {
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        model.addAttribute("first", "Oui");
-        return "modifierPasswordFirstConnection";
-    }
-
-    @PostMapping("/first/modifierPassword")
-    public String modifierPasswordUserFirstConnection(@RequestParam("password") String password,
-            @RequestParam("password2") String password2,
-            @RequestParam("username") String username, Model model, Principal principal) {
-
-        if (password.equals(password2)) {
-            userService.modifierPasswordPourPremiereConnexion(new PasswordEncryptionService().encrypPassword(password),
-                    "Non", username);
-
-            return "login";
-        } else {
-            model.addAttribute("message", "Les deux mots de passe entrés ne sont pas identiques");
-            model.addAttribute("username", principal.getName());
-            model.addAttribute("prenom", userService.getPrenomUser());
-            System.out.println("username====================11111111===" + username);
-            return "modifierPasswordFirstConnection";
+                        return Map.ofEntries(Map.entry("id",
+                                        String.valueOf(evenement.getId())),
+                                        Map.entry("date", evenement.getDate().toString()),
+                                        Map.entry("format",
+                                                        evenement.getFormat()),
+                                        Map.entry("type",
+                                                        evenement.getType()),
+                                        Map.entry("heure", evenement.getHeure()),
+                                        Map.entry("institution", evenement.getInstitution()),
+                                        Map.entry("objectif", evenement.getObjectif()),
+                                        Map.entry("statut", evenement.getStatut()),
+                                        Map.entry("nouvelleDate",
+                                                        nouvelleDate),
+                                        Map.entry("suiviTronque", suiviTronque),
+                                        Map.entry("suiviComplet",
+                                                        suiviComplet));
+                }).toList();
+                model.addAttribute("evenements", evenementAvecSuivi);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                evenementService.listEvenementDTOs(evenementService.listEvenements());
+                return "listeEvenement";
         }
 
-    }
+        @PostMapping("/annuler")
+        String annuler(Model model, Principal principal) {
+                List<EvenementDTO> list = evenementService.listEvenementDTOs();
+                int longueurMax = 50;
+                List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement -> {
+                        String suiviTronque = "";
+                        String suiviComplet = evenement.getSuivis() != null ? evenement.getSuivis() : "";
+                        String nouvelleDate = "";
+                        if (evenement.getSuivis() != null && evenement.getNouvelleDate() != null) {
+                                suiviTronque = evenement.getSuivis().length() > longueurMax
+                                                ? evenement.getSuivis().substring(0, longueurMax) + "..."
+                                                : evenement.getSuivis();
+                                nouvelleDate = evenement.getNouvelleDate().toString();
+                        }
 
-    @GetMapping("/user/evenement/planifer")
-    public String evenementPlanifie(Model model, Principal principal) {
-        System.out.println("Prenom de l'utilisateur====================" + userService.getPrenomUser());
-        model.addAttribute("evenements", evenementService.listEvenementDTOParStatut("Planifié"));
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        return "listeEvenementPlanifie";
-    }
-
-    @GetMapping("/user/evenement/reporter")
-    public String evenementReporte(Model model, Principal principal) {
-        System.out.println("Prenom de l'utilisateur====================" + userService.getPrenomUser());
-        model.addAttribute("evenements", evenementService.listEvenementDTOParStatut("Reporté"));
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        return "listeEvenementReporte";
-    }
-
-    @GetMapping("/user/evenement/annuler")
-    public String evenementAnnule(Model model, Principal principal) {
-        System.out.println("Prenom de l'utilisateur====================" + userService.getPrenomUser());
-        model.addAttribute("evenements", evenementService.listEvenementDTOParStatut("Annulé"));
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        return "listeEvenementAnnule";
-    }
-
-    @GetMapping("/user/evenement/terminer")
-    public String evenementTermine(Model model, Principal principal) {
-        System.out.println("Prenom de l'utilisateur====================" + userService.getPrenomUser());
-        model.addAttribute("evenements", evenementService.listEvenementDTOParStatut("Terminé"));
-        model.addAttribute("username", principal.getName());
-        model.addAttribute("prenom", userService.getPrenomUser());
-        return "listeEvenementTermine";
-    }
-
-    @GetMapping("/user/generatPdfParStatut")
-    public ResponseEntity<byte[]> generatePdfParStatut(@RequestParam("statut") String statut) {
-        byte[] liste = null;
-        try {
-
-            liste = evenementService.listeEvenement(evenementService.listEvenementDTOParStatut(statut));
-            // evenementService.sendReminders(evenementService.listEvenementDTOs());
-            System.out.println("Apres sendReminders");
-            if (liste != null) {
-                System.out.println("Liste n'est pas nulle");
-            }
-
-        } catch (Exception ex) {
+                        return Map.ofEntries(Map.entry("id",
+                                        String.valueOf(evenement.getId())),
+                                        Map.entry("date", evenement.getDate().toString()),
+                                        Map.entry("format",
+                                                        evenement.getFormat()),
+                                        Map.entry("type",
+                                                        evenement.getType()),
+                                        Map.entry("heure", evenement.getHeure()),
+                                        Map.entry("institution", evenement.getInstitution()),
+                                        Map.entry("objectif", evenement.getObjectif()),
+                                        Map.entry("statut", evenement.getStatut()),
+                                        Map.entry("nouvelleDate",
+                                                        nouvelleDate),
+                                        Map.entry("suiviTronque", suiviTronque),
+                                        Map.entry("suiviComplet",
+                                                        suiviComplet));
+                }).toList();
+                model.addAttribute("evenements", evenementAvecSuivi);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                evenementService.listEvenementDTOs(evenementService.listEvenements());
+                return "listeEvenement";
         }
-        return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
-                .header("Content-Disposition", "inline; filename=raport.pdf").body(liste);
-    }
 
-    @GetMapping("/user/generatCsvParStatut")
-    public ResponseEntity<byte[]> generateCsvParStatut(@RequestParam("statut") String statut) {
-        byte[] liste = null;
-        try {
-            liste = evenementService.generateCsv(evenementService.listEvenementDTOParStatut(statut));
-            if (liste != null) {
-                System.out.println("Liste n'est pas nulle");
-            }
-
-        } catch (Exception ex) {
+        @GetMapping("/formAgenda")
+        String formeAgenda(Model model, Principal principal) {
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                return "formAgenda";
         }
-        // return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
-        // .header("Content-Disposition", "inline; filename=raport.pdf").body(liste);
 
-        return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN)
-                .header("Content-Disposition", "attachment; filename=raport.csv").body(liste);
-    }
+        @GetMapping("/rechercherEvenement")
+        String rechercherEvenement(@RequestParam("id") int id, Model model, Principal principal) {
+                model.addAttribute("evenement", evenementService.getEvenement(id));
+                model.addAttribute("evenements", evenementService.listEvenementDTOs());
+                model.addAttribute("optionFormat", List.of("En ligne", "Présentiel"));
+                model.addAttribute("optionType", List.of("Interne", "Externe"));
+                model.addAttribute("optionHeure",
+                                List.of("1h am", "2h am", "3h am", "4h am", "5h am", "6h am", "7h am", "8h am",
+                                                "9h am", "10h am", "11h am", "Midi", "1h pm", "2h pm", "3h pm", "4h pm",
+                                                "5h pm", "6h pm",
+                                                "7h pm", "8h pm",
+                                                "9h pm", "10h pm", "11h pm", "Minuit"));
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
 
-    @GetMapping("/user/listeEvenement/{id}")
-    public String modifierSuivis(@PathVariable int id, Model model) {
-        EvenementDTO evenementDTO = evenementService.getEvenement(id);
-        System.out.println("Suivis======================" + evenementDTO.getSuivis());
+                return "modifierEvenement";
+        }
 
-        model.addAttribute("modalModifierSuiviVisible", "oui");
-        model.addAttribute("evenementId", id);
-        model.addAttribute("suivis", evenementDTO.getSuivis());
+        @PostMapping("/user/saveEvenement")
+        String saveEvenement(@ModelAttribute EvenementDTO evenement, Model model, Principal principal) {
 
-        return "listeEvenement";
-    }
+                try {
+                        System.out.println("null==========================");
+                        evenement.setStatut("Planifié");
+                        evenement.setWhocreated("admirl");
+                        evenement.setDatecreated(LocalDate.now());
+                        evenementService.enregistrer(evenement);
+                        model.addAttribute("evenements", evenementService.listEvenementDTOs());
+                        model.addAttribute("username", principal.getName());
+                        model.addAttribute("prenom", userService.getPrenomUser());
+
+                } catch (Exception e) {
+                        e.printStackTrace();
+                }
+                List<EvenementDTO> list = evenementService.listEvenementDTOs();
+                int longueurMax = 50;
+                List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement1 -> {
+                        String suiviTronque = "";
+                        String suiviComplet = evenement1.getSuivis() != null ? evenement1.getSuivis() : "";
+                        String nouvelleDate = "";
+                        if (evenement1.getSuivis() != null && evenement1.getNouvelleDate() != null) {
+                                suiviTronque = evenement1.getSuivis().length() > longueurMax
+                                                ? evenement1.getSuivis().substring(0, longueurMax) + "..."
+                                                : evenement1.getSuivis();
+                                nouvelleDate = evenement1.getNouvelleDate().toString();
+                        }
+
+                        return Map.ofEntries(Map.entry("id",
+                                        String.valueOf(evenement1.getId())),
+                                        Map.entry("date", evenement1.getDate().toString()),
+                                        Map.entry("format",
+                                                        evenement1.getFormat()),
+                                        Map.entry("type",
+                                                        evenement1.getType()),
+                                        Map.entry("heure", evenement.getHeure()),
+                                        Map.entry("institution", evenement1.getInstitution()),
+                                        Map.entry("objectif", evenement1.getObjectif()),
+                                        Map.entry("statut", evenement1.getStatut()),
+                                        Map.entry("nouvelleDate",
+                                                        nouvelleDate),
+                                        Map.entry("suiviTronque", suiviTronque),
+                                        Map.entry("suiviComplet",
+                                                        suiviComplet));
+                }).toList();
+                model.addAttribute("evenements", evenementAvecSuivi);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                evenementService.listEvenementDTOs(evenementService.listEvenements());
+
+                return "listeEvenement";
+        }
+
+        @PostMapping("/user/modifierEvenement")
+        String modifierEvenement(@ModelAttribute EvenementDTO evenement1, Model model, Principal principal) {
+                evenement1.setStatut("Reporté");
+                evenement1.setWhomodified("admirl");
+                evenement1.setDatemodified(LocalDate.now());
+                evenementService.modifier(evenement1);
+                List<EvenementDTO> list = evenementService.listEvenementDTOs();
+                int longueurMax = 50;
+                List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement -> {
+                        String suiviTronque = "";
+                        String suiviComplet = evenement.getSuivis() != null ? evenement.getSuivis() : "";
+                        String nouvelleDate = "";
+                        if (evenement.getSuivis() != null && evenement.getNouvelleDate() != null) {
+                                suiviTronque = evenement.getSuivis().length() > longueurMax
+                                                ? evenement.getSuivis().substring(0, longueurMax) + "..."
+                                                : evenement.getSuivis();
+                                nouvelleDate = evenement.getNouvelleDate().toString();
+                        }
+
+                        return Map.ofEntries(Map.entry("id",
+                                        String.valueOf(evenement.getId())),
+                                        Map.entry("date", evenement.getDate().toString()),
+                                        Map.entry("format",
+                                                        evenement.getFormat()),
+                                        Map.entry("type",
+                                                        evenement.getType()),
+                                        Map.entry("heure", evenement.getHeure()),
+                                        Map.entry("institution", evenement.getInstitution()),
+                                        Map.entry("objectif", evenement.getObjectif()),
+                                        Map.entry("statut", evenement.getStatut()),
+                                        Map.entry("nouvelleDate",
+                                                        nouvelleDate),
+                                        Map.entry("suiviTronque", suiviTronque),
+                                        Map.entry("suiviComplet",
+                                                        suiviComplet));
+                }).toList();
+                model.addAttribute("evenements", evenementAvecSuivi);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                evenementService.listEvenementDTOs(evenementService.listEvenements());
+                return "redirect:/listeEvenement";
+        }
+
+        @PostMapping("/user/annulerEvenement")
+        String anuulerEvenement(@RequestParam("id") int id, Model model, Principal principal) {
+                EvenementDTO evenement1 = evenementService.getEvenement(id);
+                // System.out.println("Id de l'evenement===========" + evenement1.getId());
+                // System.out.println("Institution==========" + evenement1.getInstitution());
+                evenement1.setStatut("Annulé");
+                evenement1.setWhomodified("admirl");
+                evenement1.setDatemodified(LocalDate.now());
+                evenementService.modifier(evenement1);
+                List<EvenementDTO> list = evenementService.listEvenementDTOs();
+                int longueurMax = 50;
+                List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement -> {
+                        String suiviTronque = "";
+                        String suiviComplet = evenement.getSuivis() != null ? evenement.getSuivis() : "";
+                        String nouvelleDate = "";
+                        if (evenement.getSuivis() != null && evenement.getNouvelleDate() != null) {
+                                suiviTronque = evenement.getSuivis().length() > longueurMax
+                                                ? evenement.getSuivis().substring(0, longueurMax) + "..."
+                                                : evenement.getSuivis();
+                                nouvelleDate = evenement.getNouvelleDate().toString();
+                        }
+
+                        return Map.ofEntries(Map.entry("id",
+                                        String.valueOf(evenement.getId())),
+                                        Map.entry("date", evenement.getDate().toString()),
+                                        Map.entry("format",
+                                                        evenement.getFormat()),
+                                        Map.entry("type",
+                                                        evenement.getType()),
+                                        Map.entry("heure", evenement.getHeure()),
+                                        Map.entry("institution", evenement.getInstitution()),
+                                        Map.entry("objectif", evenement.getObjectif()),
+                                        Map.entry("statut", evenement.getStatut()),
+                                        Map.entry("nouvelleDate",
+                                                        nouvelleDate),
+                                        Map.entry("suiviTronque", suiviTronque),
+                                        Map.entry("suiviComplet",
+                                                        suiviComplet));
+                }).toList();
+                model.addAttribute("evenements", evenementAvecSuivi);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                evenementService.listEvenementDTOs(evenementService.listEvenements());
+                return "redirect:/listeEvenement";
+        }
+
+        @PostMapping("/user/terminerEvenement")
+        String terminerEvenement(@RequestParam("id") int id, @RequestParam("statut") String statut, Model model,
+                        Principal principal) {
+                if (statut.equals("Terminé")) {
+                        model.addAttribute("modalVisible", "oui");
+                        // System.out.println("Id de l'evenement===========" + id);
+                        // System.out.println("Statut==========" + statut);
+                        model.addAttribute("evenementId", id);
+                        List<EvenementDTO> list = evenementService.listEvenementDTOs();
+                        int longueurMax = 50;
+                        List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement -> {
+                                String suiviTronque = "";
+                                String suiviComplet = evenement.getSuivis() != null ? evenement.getSuivis() : "";
+                                String nouvelleDate = "";
+                                if (evenement.getSuivis() != null && evenement.getNouvelleDate() != null) {
+                                        suiviTronque = evenement.getSuivis().length() > longueurMax
+                                                        ? evenement.getSuivis().substring(0, longueurMax) + "..."
+                                                        : evenement.getSuivis();
+                                        nouvelleDate = evenement.getNouvelleDate().toString();
+                                }
+
+                                return Map.ofEntries(Map.entry("id",
+                                                String.valueOf(evenement.getId())),
+                                                Map.entry("date", evenement.getDate().toString()),
+                                                Map.entry("format",
+                                                                evenement.getFormat()),
+                                                Map.entry("type",
+                                                                evenement.getType()),
+                                                Map.entry("heure", evenement.getHeure()),
+                                                Map.entry("institution", evenement.getInstitution()),
+                                                Map.entry("objectif", evenement.getObjectif()),
+                                                Map.entry("statut", evenement.getStatut()),
+                                                Map.entry("nouvelleDate",
+                                                                nouvelleDate),
+                                                Map.entry("suiviTronque", suiviTronque),
+                                                Map.entry("suiviComplet",
+                                                                suiviComplet));
+                        }).toList();
+                        model.addAttribute("evenements", evenementAvecSuivi);
+                        model.addAttribute("username", principal.getName());
+                        model.addAttribute("prenom", userService.getPrenomUser());
+                        evenementService.listEvenementDTOs(evenementService.listEvenements());
+
+                }
+                model.addAttribute("prenom", userService.getPrenomUser());
+                return "listeEvenement";
+        }
+
+        @PostMapping("/user/validerTerminerEvenement")
+        String validerTerminerEvenement(@RequestParam("id") int id, @RequestParam("suivis") String suivis, Model model,
+                        Principal principal) {
+                System.out.println("Id de l'evenement===========" + id);
+                EvenementDTO evenement1 = evenementService.getEvenement(id);
+                evenement1.setStatut("Terminé");
+                evenement1.setSuivis(suivis);
+                evenement1.setWhomodified("admirl");
+                evenement1.setDatemodified(LocalDate.now());
+                evenementService.modifier(evenement1);
+                List<EvenementDTO> list = evenementService.listEvenementDTOs();
+                int longueurMax = 50;
+                List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement -> {
+                        String suiviTronque = "";
+                        String suiviComplet = evenement.getSuivis() != null ? evenement.getSuivis() : "";
+                        String nouvelleDate = "";
+                        if (evenement.getSuivis() != null && evenement.getNouvelleDate() != null) {
+                                suiviTronque = evenement.getSuivis().length() > longueurMax
+                                                ? evenement.getSuivis().substring(0, longueurMax) + "..."
+                                                : evenement.getSuivis();
+                                nouvelleDate = evenement.getNouvelleDate().toString();
+                        }
+
+                        return Map.ofEntries(Map.entry("id",
+                                        String.valueOf(evenement.getId())),
+                                        Map.entry("date", evenement.getDate().toString()),
+                                        Map.entry("format",
+                                                        evenement.getFormat()),
+                                        Map.entry("type",
+                                                        evenement.getType()),
+                                        Map.entry("heure", evenement.getHeure()),
+                                        Map.entry("institution", evenement.getInstitution()),
+                                        Map.entry("objectif", evenement.getObjectif()),
+                                        Map.entry("statut", evenement.getStatut()),
+                                        Map.entry("nouvelleDate",
+                                                        nouvelleDate),
+                                        Map.entry("suiviTronque", suiviTronque),
+                                        Map.entry("suiviComplet",
+                                                        suiviComplet));
+                }).toList();
+                model.addAttribute("evenements", evenementAvecSuivi);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                evenementService.listEvenementDTOs(evenementService.listEvenements());
+                return "redirect:/listeEvenement";
+        }
+
+        /**
+         * @return
+         */
+        @GetMapping("/user/generatPdf")
+        public ResponseEntity<byte[]> generatePdf() {
+                byte[] liste = null;
+                try {
+
+                        // List<EvenementDTO> list = evenementService.listEvenementDTOs(evenements);
+                        // if (list != null) {
+                        // for (EvenementDTO evenementDTO : list) {
+                        // System.out.println(evenementDTO.getDate());
+                        // System.out.println(evenementDTO.getHeure());
+                        // }
+                        // } else {
+                        // System.out.println("List est nulle");
+                        // }
+                        liste = evenementService.listeEvenement(evenementService.listEvenementDTOs());
+                        // evenementService.sendReminders(evenementService.listEvenementDTOs());
+                        System.out.println("Apres sendReminders");
+                        if (liste != null) {
+                                System.out.println("Liste n'est pas nulle");
+                        }
+
+                } catch (Exception ex) {
+                }
+                return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                                .header("Content-Disposition", "inline; filename=raport.pdf").body(liste);
+        }
+
+        @GetMapping("/user/generatCsv")
+        public ResponseEntity<byte[]> generateCsv() {
+                byte[] liste = null;
+                try {
+                        liste = evenementService.generateCsv(evenementService.listEvenementDTOs());
+                        if (liste != null) {
+                                System.out.println("Liste n'est pas nulle");
+                        }
+
+                } catch (Exception ex) {
+                }
+                // return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                // .header("Content-Disposition", "inline; filename=raport.pdf").body(liste);
+
+                return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN)
+                                .header("Content-Disposition", "attachment; filename=raport.csv").body(liste);
+        }
+
+        @PostMapping("/user/formModifierPassword")
+        public String formModiierPassword(@RequestParam("username") String username, Model model, Principal principal) {
+                model.addAttribute("username", username);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                model.addAttribute("first", "Non");
+                return "modifierPassword";
+        }
+
+        @PostMapping("/user/modifierPassword")
+        public String modifierPasswordUser(@RequestParam("password") String password,
+                        @RequestParam("password2") String password2,
+                        @RequestParam("username") String username, Model model, Principal principal) {
+                if (password.equals(password2)) {
+                        userService.modifierPassword(new PasswordEncryptionService().encrypPassword(password),
+                                        username);
+                        return "login";
+                } else {
+                        model.addAttribute("message", "Les deux mots de passe entrés ne sont pas identiques");
+                        model.addAttribute("username", principal.getName());
+                        model.addAttribute("prenom", userService.getPrenomUser());
+                        return "modifierPassword";
+                }
+
+        }
+
+        @GetMapping("/first/formModifierPassword")
+        public String formModiierPasswordFirstConnection(Model model,
+                        Principal principal) {
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                model.addAttribute("first", "Oui");
+                return "modifierPasswordFirstConnection";
+        }
+
+        @PostMapping("/first/modifierPassword")
+        public String modifierPasswordUserFirstConnection(@RequestParam("password") String password,
+                        @RequestParam("password2") String password2,
+                        @RequestParam("username") String username, Model model, Principal principal) {
+
+                if (password.equals(password2)) {
+                        userService.modifierPasswordPourPremiereConnexion(
+                                        new PasswordEncryptionService().encrypPassword(password),
+                                        "Non", username);
+
+                        return "login";
+                } else {
+                        model.addAttribute("message", "Les deux mots de passe entrés ne sont pas identiques");
+                        model.addAttribute("username", principal.getName());
+                        model.addAttribute("prenom", userService.getPrenomUser());
+                        System.out.println("username====================11111111===" + username);
+                        return "modifierPasswordFirstConnection";
+                }
+
+        }
+
+        @GetMapping("/user/evenement/planifer")
+        public String evenementPlanifie(Model model, Principal principal) {
+                System.out.println("Prenom de l'utilisateur====================" + userService.getPrenomUser());
+                model.addAttribute("evenements", evenementService.listEvenementDTOParStatut("Planifié"));
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                return "listeEvenementPlanifie";
+        }
+
+        @GetMapping("/user/evenement/reporter")
+        public String evenementReporte(Model model, Principal principal) {
+                System.out.println("Prenom de l'utilisateur====================" + userService.getPrenomUser());
+                model.addAttribute("evenements", evenementService.listEvenementDTOParStatut("Reporté"));
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                return "listeEvenementReporte";
+        }
+
+        @GetMapping("/user/evenement/annuler")
+        public String evenementAnnule(Model model, Principal principal) {
+                System.out.println("Prenom de l'utilisateur====================" + userService.getPrenomUser());
+                model.addAttribute("evenements", evenementService.listEvenementDTOParStatut("Annulé"));
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                return "listeEvenementAnnule";
+        }
+
+        @GetMapping("/user/evenement/terminer")
+        public String evenementTermine(Model model, Principal principal) {
+                List<EvenementDTO> list = evenementService.listEvenementDTOParStatut("Terminé");
+                int longueurMax = 50;
+                List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement -> {
+                        String suiviTronque = "";
+                        String suiviComplet = evenement.getSuivis() != null ? evenement.getSuivis() : "";
+                        String nouvelleDate = "";
+                        if (evenement.getSuivis() != null && evenement.getNouvelleDate() != null) {
+                                suiviTronque = evenement.getSuivis().length() > longueurMax
+                                                ? evenement.getSuivis().substring(0, longueurMax) + "..."
+                                                : evenement.getSuivis();
+                                nouvelleDate = evenement.getNouvelleDate().toString();
+                        }
+
+                        return Map.ofEntries(Map.entry("id",
+                                        String.valueOf(evenement.getId())),
+                                        Map.entry("date", evenement.getDate().toString()),
+                                        Map.entry("format",
+                                                        evenement.getFormat()),
+                                        Map.entry("type",
+                                                        evenement.getType()),
+                                        Map.entry("heure", evenement.getHeure()),
+                                        Map.entry("institution", evenement.getInstitution()),
+                                        Map.entry("objectif", evenement.getObjectif()),
+                                        Map.entry("statut", evenement.getStatut()),
+                                        Map.entry("nouvelleDate",
+                                                        nouvelleDate),
+                                        Map.entry("suiviTronque", suiviTronque),
+                                        Map.entry("suiviComplet",
+                                                        suiviComplet));
+                }).toList();
+                model.addAttribute("evenements", evenementAvecSuivi);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                evenementService.listEvenementDTOs(evenementService.listEvenements());
+                return "listeEvenementTermine";
+        }
+
+        @GetMapping("/user/generatPdfParStatut")
+        public ResponseEntity<byte[]> generatePdfParStatut(@RequestParam("statut") String statut) {
+                byte[] liste = null;
+                try {
+
+                        liste = evenementService.listeEvenement(evenementService.listEvenementDTOParStatut(statut));
+                        // evenementService.sendReminders(evenementService.listEvenementDTOs());
+                        System.out.println("Apres sendReminders");
+                        if (liste != null) {
+                                System.out.println("Liste n'est pas nulle");
+                        }
+
+                } catch (Exception ex) {
+                }
+                return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                                .header("Content-Disposition", "inline; filename=raport.pdf").body(liste);
+        }
+
+        @GetMapping("/user/generatCsvParStatut")
+        public ResponseEntity<byte[]> generateCsvParStatut(@RequestParam("statut") String statut) {
+                byte[] liste = null;
+                try {
+                        liste = evenementService.generateCsv(evenementService.listEvenementDTOParStatut(statut));
+                        if (liste != null) {
+                                System.out.println("Liste n'est pas nulle");
+                        }
+
+                } catch (Exception ex) {
+                }
+                // return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF)
+                // .header("Content-Disposition", "inline; filename=raport.pdf").body(liste);
+
+                return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN)
+                                .header("Content-Disposition", "attachment; filename=raport.csv").body(liste);
+        }
+
+        @GetMapping("/user/listeEvenement/{id}")
+        public String modifierSuivis(@PathVariable int id, Model model, Principal principal) {
+                EvenementDTO evenementDTO = evenementService.getEvenement(id);
+                System.out.println("Suivis======================" + evenementDTO.getSuivis());
+
+                model.addAttribute("modalModifierSuiviVisible", "oui");
+                model.addAttribute("evenementId", id);
+                model.addAttribute("suivis", evenementDTO.getSuivis());
+
+                List<EvenementDTO> list = evenementService.listEvenementDTOs();
+                int longueurMax = 50;
+                List<Map<String, String>> evenementAvecSuivi = list.stream().map(evenement -> {
+                        String suiviTronque = "";
+                        String suiviComplet = evenement.getSuivis() != null ? evenement.getSuivis() : "";
+                        String nouvelleDate = "";
+                        if (evenement.getSuivis() != null && evenement.getNouvelleDate() != null) {
+                                suiviTronque = evenement.getSuivis().length() > longueurMax
+                                                ? evenement.getSuivis().substring(0, longueurMax) + "..."
+                                                : evenement.getSuivis();
+                                nouvelleDate = evenement.getNouvelleDate().toString();
+                        }
+
+                        return Map.ofEntries(Map.entry("id",
+                                        String.valueOf(evenement.getId())),
+                                        Map.entry("date", evenement.getDate().toString()),
+                                        Map.entry("format",
+                                                        evenement.getFormat()),
+                                        Map.entry("type",
+                                                        evenement.getType()),
+                                        Map.entry("heure", evenement.getHeure()),
+                                        Map.entry("institution", evenement.getInstitution()),
+                                        Map.entry("objectif", evenement.getObjectif()),
+                                        Map.entry("statut", evenement.getStatut()),
+                                        Map.entry("nouvelleDate",
+                                                        nouvelleDate),
+                                        Map.entry("suiviTronque", suiviTronque),
+                                        Map.entry("suiviComplet",
+                                                        suiviComplet));
+                }).toList();
+                model.addAttribute("evenements", evenementAvecSuivi);
+                model.addAttribute("username", principal.getName());
+                model.addAttribute("prenom", userService.getPrenomUser());
+                evenementService.listEvenementDTOs(evenementService.listEvenements());
+
+                return "listeEvenement";
+        }
 }

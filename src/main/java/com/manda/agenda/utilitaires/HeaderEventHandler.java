@@ -17,17 +17,25 @@ import com.itextpdf.kernel.pdf.event.PdfDocumentEvent;
 import com.itextpdf.layout.Canvas;
 import com.itextpdf.layout.element.Paragraph;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+
 import lombok.EqualsAndHashCode;
 
-@Data
-@AllArgsConstructor
+
 @EqualsAndHashCode(callSuper = false)
 public class HeaderEventHandler extends AbstractPdfDocumentEventHandler {
     private final String path;
     private final String pathRight;
     private final Paragraph text;
+
+    public HeaderEventHandler(String path, String pathRight, Paragraph text) {
+        this.path = path;
+        this.pathRight = pathRight;
+        this.text = text;
+    }
+
+
+
+
 
     @Override
     protected void onAcceptedEvent(AbstractPdfDocumentEvent event) {
@@ -119,6 +127,30 @@ public class HeaderEventHandler extends AbstractPdfDocumentEventHandler {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+
+
+
+
+    public String getPath() {
+        return path;
+    }
+
+
+
+
+
+    public String getPathRight() {
+        return pathRight;
+    }
+
+
+
+
+
+    public Paragraph getText() {
+        return text;
     }
 
 }
